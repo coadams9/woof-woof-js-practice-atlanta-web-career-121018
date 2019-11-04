@@ -1,124 +1,92 @@
-document.addEventListener('DOMContentLoaded', initPage)
+document.addEventListener('DOMContentLoaded', () => initPage())
 
-function initPage(){
+const initPage = () => {
   fetchDogs()
-  showAllDogs()
-  filterButnHandler()
+  // showInfo()
 }
 
 
+const fetchDogs = () => {
+  fetch('http://localhost:3000/pups')
+    .then(res => res.json())
+    .then(data => data.forEach(dog => {
+      let container = document.querySelector('#dog-bar')
 
+      let span = document.createElement('span')
+      container.appendChild(span)
 
-function fetchDogs(){
-  return fetch('http://localhost:3000/pups')
-  .then(res => res.json())
+      span.innerText = dog.name
+
+      showInfo(dog, span)
+    }))
 }
 
-function showAllDogs(){
-  fetchDogs()
-  .then(dogs => {
-    dogs.forEach(renderSingleDog)
 
+const showInfo = (dog, span) => {
+  const goodDog = (button) => {
+    button.innerText = 'Good Dog!'
+  }
+
+  const badDog = (button) => {
+    button.innerText = 'Bad Dog!'
+  }
+
+  span.addEventListener('click', () => {
+    let dogInfo = document.querySelector('#dog-info')
+
+
+    let img = document.createElement('img')
+    let h2 = document.createElement('h2')
+
+    img.src = dog.image
+    h2.innerText = dog.name
+
+    dogInfo.appendChild(img)
+    dogInfo.appendChild(h2)
+
+    let button = document.createElement('button')
+    button.dataset.id = dog.id
+    button.dataset.isGoodDog = dog.isGoodDog
+
+
+    dog.isGoodDog ? goodDog(button) : badDog(button)
+
+    dogInfo.appendChild(button)
+
+    toggleDog(button)
   })
 }
 
-function filterButnHandler(){
-  let button = document.querySelector('#good-dog-filter')
-  button.addEventListener('click', filterDogs)
-}
-
-function renderSingleDog(dog){
-  let dogContainer = document.querySelector('#dog-bar')
-  let span = document.createElement('span')
-  dogContainer.appendChild(span)
-  span.innerText = dog.name
-  span.dataset.id = dog.id
-  span.addEventListener('click', () => dogInfo(dog))
-  console.log(dog)
-}
-
-function dogInfo(dog){
-  // debugger
-  let dogInfo = document.querySelector('#dog-info')
-  dogInfo.innerHTML = ""
-  let image = document.createElement('img')
-  image.src = dog.image
-  dogInfo.appendChild(image)
-
-  let h2 = document.createElement('h2')
-  h2.innerText = dog.name
-  dogInfo.appendChild(h2)
-
-  let button = document.createElement('button')
-  if (dog.isGoodDog === true) {
-    button.textContent = "Good Dog!"
-  } else {
-    button.textContent = "Bad Dog!"
-  }
-  button.dataset.id = dog.id
-  button.addEventListener('click', () => goodOrBad(dog))
-  dogInfo.appendChild(button)
-
-
-}
-
-
-function goodOrBad(dog){
-  // debugger
-  dogStatus = null
-
-  if (event.target.innerText === "Bad Dog!"){
-    event.target.innerText = "Good Dog!"
-    dogStatus = true
-  } else {
-    event.target.innerText = "Bad Dog!"
-    dogStatus = false
-  }
-
-
-  // if (dog.isGoodDog === true){
-  //   var dogStatus = false
-  // } else {
-  //   var dogStatus = true
-  // }
-
-  // debugger
-
-
-
-  fetch(`http://localhost:3000/pups/${dog.id}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    body: JSON.stringify({
-      isGoodDog: dogStatus
-    })
-
+function doDogThings(button) {
+  button.addEventListener('click', () => {
+    if (button.innerText === 'Good Dog!') {
+      button.innerText = 'Bad Dog!'
+    } else {
+      button.innerText = 'Good Dog!'
+    }
   })
-  // debugger
-
-
 }
 
+const doBackendThings = button => {
+  button.addEventListener('click', () => {
+    let value;
 
-function filterDogs(){
+    button.dataset.isGoodDog === true ? value = false : value = true
+    console.log(button.dataset.isGoodDog)
+    console.log(value)
 
-  let dogContainer = document.querySelector('#dog-bar')
-  dogContainer.innerHTML = ""
-
-  if (event.target.textContent === "Filter good dogs: OFF"){
-    event.target.textContent = "Filter good dogs: ON"
-    fetchDogs()
-    .then(dog => {
-      dog.filter(dog => dog.isGoodDog).forEach(renderSingleDog)
+    fetch(`http://localhost:3000/pups/${button.dataset.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        isGoodDog: true
+      })
     })
-  } else if (event.target.textContent === "Filter good dogs: ON") {
-    event.target.textContent = "Filter good dogs: OFF"
-    showAllDogs()
-  }
-
-
-
+  })
 }
+
+const toggleDog = button => {
+  doDogThings(button)
+  doBackendThings(button)
+}
+
+
